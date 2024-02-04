@@ -192,7 +192,7 @@ def home():
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
         </table>
-        <p>Coded by: MO-Gambul</p>
+        <p>Coded by: yahia almarafi</p>
     </body>
     </html>
     """

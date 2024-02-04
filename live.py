@@ -6,30 +6,36 @@ from datetime import datetime
 app = Flask(__name__)
 
 def calculate_percentage_difference(higher_value, lower_value):
+    # حساب الفرق النسبي
     difference = float(higher_value) - float(lower_value)
     percentage_difference = (difference / float(lower_value)) * 100
     return round(percentage_difference, 2)
 
 def get_current_datetime():
+    # الحصول على التاريخ والوقت الحاليين
     now = datetime.now()
     return now.strftime("%Y-%m-%d %H:%M:%S")
 
 def fetch_exchange_rates():
+    # إحضار أسعار الصرف
+    # تعريف رؤوس الطلب لتجاوز مشاكل الوكيل
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
     link = "https://egcurrency.com/ar/currency/egp/exchange"
     resp = requests.get(link, headers=headers)
     encode = html.fromstring(resp.content)
     
+    # محاولة جلب الأسعار من الموقع
     try:
         buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][1]/text()")[0]
     except IndexError:
-        buyPriceInBlackmarket = "Unavailable"
+        buyPriceInBlackmarket = "غير متاح"
     
     try:
         sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][2]/text()")[0]
     except IndexError:
-        sellPriceInBlackMarket = "Unavailable"
+        sellPriceInBlackMarket = "غير متاح"
 
+    # إجراء طلب آخر للحصول على معلومات إضافية
     link2 = "https://egcurrency.com/ar/currency/usd-to-egp/exchange"
     resp2 = requests.get(link2, headers=headers)
     encode1 = html.fromstring(resp2.content)
@@ -37,15 +43,16 @@ def fetch_exchange_rates():
     try:
         buyPriceInBank = encode1.xpath("//tbody/tr[3]/td[2]/text()")[0]
     except IndexError:
-        buyPriceInBank = "Unavailable"
+        buyPriceInBank = "غير متاح"
     
     try:
         sellPriceInBank = encode1.xpath("//tbody/tr[3]/td[3]/text()")[0]
     except IndexError:
-        sellPriceInBank = "Unavailable"
+        sellPriceInBank = "غير متاح"
 
-    buyPriceDifferencePercentage = calculate_percentage_difference(buyPriceInBlackmarket, buyPriceInBank) if buyPriceInBlackmarket != "Unavailable" and buyPriceInBank != "Unavailable" else "N/A"
-    sellPriceDifferencePercentage = calculate_percentage_difference(sellPriceInBlackMarket, sellPriceInBank) if sellPriceInBlackMarket != "Unavailable" and sellPriceInBank != "Unavailable" else "N/A"
+    # حساب الفرق النسبي بين الأسعار
+    buyPriceDifferencePercentage = calculate_percentage_difference(buyPriceInBlackmarket, buyPriceInBank) if buyPriceInBlackmarket != "غير متاح" and buyPriceInBank != "غير متاح" else "غير متوفر"
+    sellPriceDifferencePercentage = calculate_percentage_difference(sellPriceInBlackMarket, sellPriceInBank) if sellPriceInBlackMarket != "غير متاح" and sellPriceInBank != "غير متاح" else "غير متوفر"
 
     extraction_datetime = get_current_datetime()
 
@@ -64,13 +71,14 @@ def home():
     rates = fetch_exchange_rates()
     html_template = """
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="ar">
     <head>
         <meta charset="UTF-8">
-        <title>EGP Exchange Rates</title>
+        <title>أسعار صرف الجنيه المصري</title>
         <style>
             body {
-                font-family: Arial, sans-serif;
+                font-family: 'Arial', sans-serif;
+                direction: rtl; /* للغة العربية */
                 margin: 0;
                 padding: 0;
                 background-color: #f4f4f4;
@@ -89,7 +97,7 @@ def home():
             th, td {
                 padding: 10px;
                 border: 1px solid #ccc;
-                text-align: left;
+                text-align: right; /* للغة العربية */
             }
             th {
                 background-color: #4CAF50;
@@ -105,27 +113,25 @@ def home():
                 text-align: center;
                 color: #666;
             }
-            /* Button styling */
             button {
                 display: block;
                 margin: 20px auto;
                 padding: 10px 20px;
                 font-size: 16px;
                 color: #fff;
-                background-color: #4CAF50; /* Button color */
+                background-color: #4CAF50;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
                 transition: background-color 0.3s ease;
             }
             button:hover {
-                background-color: #45a049; /* Button hover effect */
+                background-color: #45a049;
             }
-            /* Success message styling */
             .success-message {
                 color: #4CAF50;
                 text-align: center;
-                display: none; /* Hide by default */
+                display: none;
                 margin-top: 20px;
             }
         </style>
@@ -140,59 +146,57 @@ def home():
                         document.getElementById('sellPriceInBank').innerText = data.sellPriceInBank;
                         document.getElementById('buyPriceDifferencePercentage').innerText = "+" + data.buyPriceDifferencePercentage + "%";
                         document.getElementById('sellPriceDifferencePercentage').innerText = "+" + data.sellPriceDifferencePercentage + "%";
-                        
-                        // Update all extraction_datetime placeholders
                         var datetimeElements = document.getElementsByClassName('extraction-datetime');
                         for(var i = 0; i < datetimeElements.length; i++) {
                             datetimeElements[i].innerText = data.extraction_datetime;
                         }
-                        
-                        // Show success message
                         var successMessage = document.getElementById('successMessage');
                         successMessage.style.display = 'block';
-                        setTimeout(function() { successMessage.style.display = 'none'; }, 3000); // Hide after 3 seconds
+                        setTimeout(function() { successMessage.style.display = 'none'; }, 3000);
                     })
-                    .catch(error => console.error('Error fetching data:', error));
+                    .catch(error => console.error('خطأ في جلب البيانات:', error));
             }
         </script>
     </head>
     <body>
-        <h1>EGP Exchange Rates</h1>
-        <button onclick="refreshRates()">Refresh Rates</button>
-        <div class="success-message" id="successMessage">Data refreshed successfully!</div>
+        <h1>أسعار صرف الجنيه المصري</h1>
+        <button onclick="refreshRates()">تحديث الأسعار</button>
+        <div class="success-message" id="successMessage">تم تحديث البيانات بنجاح!</div>
         <table>
             <tr>
-                <th>Description</th>
-                <th>Rate (EGP per USD)</th>
-                <th>Difference (%)</th>
-                <th>Extraction Time</th>
+                <th>الوصف</th>
+                <th>السعر (جنيه مصري لكل دولار أمريكي)</th>
+                <th>الفرق النسبي (%)</th>
+                <th>وقت الاستخراج</th>
             </tr>
             <tr>
-                <td>Buy price in Black Market (EGP/USD)</td>
+                <td>سعر الشراء في السوق السوداء (جنيه/دولار)</td>
                 <td id="buyPriceInBlackmarket">{{ rates.buyPriceInBlackmarket }}</td>
                 <td id="buyPriceDifferencePercentage">+{{ rates.buyPriceDifferencePercentage }}%</td>
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
             <tr>
-                <td>Sell Price in Black Market (EGP/USD)</td>
+                <td>سعر البيع في السوق السوداء (جنيه/دولار)</td>
                 <td id="sellPriceInBlackMarket">{{ rates.sellPriceInBlackMarket }}</td>
                 <td id="sellPriceDifferencePercentage">+{{ rates.sellPriceDifferencePercentage }}%</td>
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
             <tr>
-                <td>Buy Price in Bank (EGP/USD)</td>
+                <td>سعر الشراء في البنك (جنيه/دولار)</td>
                 <td id="buyPriceInBank">{{ rates.buyPriceInBank }}</td>
                 <td>-</td>
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
             <tr>
-                <td>Sell Price in Bank (EGP/USD)</td>
+                <td>سعر البيع في البنك (جنيه/دولار)</td>
                 <td id="sellPriceInBank">{{ rates.sellPriceInBank }}</td>
                 <td>-</td>
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
         </table>
-        <p>Coded by: yahia almarafi</p>
+        <p style="text-align: center; font-size: 20px; font-weight: bold; color: purple; margin-top: 40px;">برمجة: yahia almarafi</p>
+
+
     </body>
     </html>
     """

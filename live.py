@@ -194,7 +194,7 @@ def home():
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
         </table>
-        <p style="text-align: center; font-size: 20px; font-weight: bold; color: purple; margin-top: 40px;">برمجة: yahia almarafi</p>
+        <p style="text-align: center; font-size: 20px; font-weight: bold; color: purple; margin-top: 40px;"> تصميم و برمجة: Yahia Almarafi</p>
 
 
     </body>

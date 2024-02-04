@@ -15,20 +15,37 @@ def get_current_datetime():
     return now.strftime("%Y-%m-%d %H:%M:%S")
 
 def fetch_exchange_rates():
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
     link = "https://egcurrency.com/ar/currency/egp/exchange"
-    resp = requests.get(link)
+    resp = requests.get(link, headers=headers)
     encode = html.fromstring(resp.content)
-    buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][1]/text()")[0]
-    sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][2]/text()")[0]
+    
+    try:
+        buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][1]/text()")[0]
+    except IndexError:
+        buyPriceInBlackmarket = "Unavailable"
+    
+    try:
+        sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][2]/text()")[0]
+    except IndexError:
+        sellPriceInBlackMarket = "Unavailable"
 
     link2 = "https://egcurrency.com/ar/currency/usd-to-egp/exchange"
-    resp2 = requests.get(link2)
+    resp2 = requests.get(link2, headers=headers)
     encode1 = html.fromstring(resp2.content)
-    buyPriceInBank = encode1.xpath("//tbody/tr[3]/td[2]/text()")[0]
-    sellPriceInBank = encode1.xpath("//tbody/tr[3]/td[3]/text()")[0]
+    
+    try:
+        buyPriceInBank = encode1.xpath("//tbody/tr[3]/td[2]/text()")[0]
+    except IndexError:
+        buyPriceInBank = "Unavailable"
+    
+    try:
+        sellPriceInBank = encode1.xpath("//tbody/tr[3]/td[3]/text()")[0]
+    except IndexError:
+        sellPriceInBank = "Unavailable"
 
-    buyPriceDifferencePercentage = calculate_percentage_difference(buyPriceInBlackmarket, buyPriceInBank)
-    sellPriceDifferencePercentage = calculate_percentage_difference(sellPriceInBlackMarket, sellPriceInBank)
+    buyPriceDifferencePercentage = calculate_percentage_difference(buyPriceInBlackmarket, buyPriceInBank) if buyPriceInBlackmarket != "Unavailable" and buyPriceInBank != "Unavailable" else "N/A"
+    sellPriceDifferencePercentage = calculate_percentage_difference(sellPriceInBlackMarket, sellPriceInBank) if sellPriceInBlackMarket != "Unavailable" and sellPriceInBank != "Unavailable" else "N/A"
 
     extraction_datetime = get_current_datetime()
 

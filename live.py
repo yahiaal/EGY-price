@@ -22,20 +22,29 @@ def fetch_exchange_rates(user_timezone='UTC'):
     resp = requests.get(link, headers=headers)
     encode = html.fromstring(resp.content)
     
+    # Attempt to fetch 'Buy Price in Black Market' with initial XPath, fallback to alternative if not found
     try:
         buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][1]/text()")[0]
     except IndexError:
-        buyPriceInBlackmarket = "غير متاح"
+        try:
+            buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-success'][1]/text()")[0]
+        except IndexError:
+            buyPriceInBlackmarket = "غير متاح"
     
+    # Attempt to fetch 'Sell Price in Black Market' with initial XPath, fallback to alternative if not found
     try:
         sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][2]/text()")[0]
     except IndexError:
-        sellPriceInBlackMarket = "غير متاح"
+        try:
+            sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-success'][2]/text()")[0]
+        except IndexError:
+            sellPriceInBlackMarket = "غير متاح"
 
     link2 = "https://egcurrency.com/ar/currency/usd-to-egp/exchange"
     resp2 = requests.get(link2, headers=headers)
     encode1 = html.fromstring(resp2.content)
     
+    # Continue with the remaining part of your function as before
     try:
         buyPriceInBank = encode1.xpath("//tbody/tr[3]/td[2]/text()")[0]
     except IndexError:

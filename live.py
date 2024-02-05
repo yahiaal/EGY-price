@@ -1,30 +1,27 @@
-from flask import Flask, render_template_string, jsonify
+from flask import Flask, render_template_string, jsonify, request
 import requests
 from lxml import html
 from datetime import datetime
+import pytz
 
 app = Flask(__name__)
 
 def calculate_percentage_difference(higher_value, lower_value):
-    # حساب الفرق النسبي
     difference = float(higher_value) - float(lower_value)
     percentage_difference = (difference / float(lower_value)) * 100
     return round(percentage_difference, 2)
 
-def get_current_datetime():
-    # الحصول على التاريخ والوقت الحاليين
-    now = datetime.now()
-    return now.strftime("%Y-%m-%d %H:%M:%S")
+def get_current_datetime(user_timezone='UTC'):
+    now_utc = datetime.now(pytz.timezone('UTC'))
+    user_time = now_utc.astimezone(pytz.timezone(user_timezone))
+    return user_time.strftime("%Y-%m-%d %H:%M:%S")
 
-def fetch_exchange_rates():
-    # إحضار أسعار الصرف
-    # تعريف رؤوس الطلب لتجاوز مشاكل الوكيل
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+def fetch_exchange_rates(user_timezone='UTC'):
+    headers = {'User-Agent': 'Mozilla/5.0'}
     link = "https://egcurrency.com/ar/currency/egp/exchange"
     resp = requests.get(link, headers=headers)
     encode = html.fromstring(resp.content)
     
-    # محاولة جلب الأسعار من الموقع
     try:
         buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][1]/text()")[0]
     except IndexError:
@@ -35,7 +32,6 @@ def fetch_exchange_rates():
     except IndexError:
         sellPriceInBlackMarket = "غير متاح"
 
-    # إجراء طلب آخر للحصول على معلومات إضافية
     link2 = "https://egcurrency.com/ar/currency/usd-to-egp/exchange"
     resp2 = requests.get(link2, headers=headers)
     encode1 = html.fromstring(resp2.content)
@@ -50,11 +46,10 @@ def fetch_exchange_rates():
     except IndexError:
         sellPriceInBank = "غير متاح"
 
-    # حساب الفرق النسبي بين الأسعار
     buyPriceDifferencePercentage = calculate_percentage_difference(buyPriceInBlackmarket, buyPriceInBank) if buyPriceInBlackmarket != "غير متاح" and buyPriceInBank != "غير متاح" else "غير متوفر"
     sellPriceDifferencePercentage = calculate_percentage_difference(sellPriceInBlackMarket, sellPriceInBank) if sellPriceInBlackMarket != "غير متاح" and sellPriceInBank != "غير متاح" else "غير متوفر"
 
-    extraction_datetime = get_current_datetime()
+    extraction_datetime = get_current_datetime(user_timezone)
 
     return {
         "buyPriceInBlackmarket": buyPriceInBlackmarket,
@@ -78,7 +73,7 @@ def home():
         <style>
             body {
                 font-family: 'Arial', sans-serif;
-                direction: rtl; /* للغة العربية */
+                direction: rtl;
                 margin: 0;
                 padding: 0;
                 background-color: #f4f4f4;
@@ -97,7 +92,7 @@ def home():
             th, td {
                 padding: 10px;
                 border: 1px solid #ccc;
-                text-align: right; /* للغة العربية */
+                text-align: right;
             }
             th {
                 background-color: #4CAF50;
@@ -137,7 +132,8 @@ def home():
         </style>
         <script>
             function refreshRates() {
-                fetch('/api/rates')
+                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                fetch(`/api/rates?timezone=${encodeURIComponent(userTimeZone)}`)
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('buyPriceInBlackmarket').innerText = data.buyPriceInBlackmarket;
@@ -154,8 +150,11 @@ def home():
                         successMessage.style.display = 'block';
                         setTimeout(function() { successMessage.style.display = 'none'; }, 3000);
                     })
-                    .catch(error => console.error('خطأ في جلب البيانات:', error));
+                    .catch(error => console.error('Error fetching data:', error));
             }
+            window.onload = function() {
+                refreshRates();
+            };
         </script>
     </head>
     <body>
@@ -194,9 +193,7 @@ def home():
                 <td class="extraction-datetime">{{ rates.extraction_datetime }}</td>
             </tr>
         </table>
-        <p style="text-align: center; font-size: 20px; font-weight: bold; color: purple; margin-top: 40px;"> تصميم و برمجة: Yahia Almarafi</p>
-
-
+        <p>تصميم و برمجة: Yahia Almarafi</p>
     </body>
     </html>
     """
@@ -204,7 +201,8 @@ def home():
 
 @app.route('/api/rates')
 def api_rates():
-    rates = fetch_exchange_rates()
+    user_timezone = request.args.get('timezone', 'UTC')
+    rates = fetch_exchange_rates(user_timezone)
     return jsonify(rates)
 
 if __name__ == '__main__':

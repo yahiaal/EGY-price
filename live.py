@@ -23,7 +23,7 @@ def fetch_exchange_rates(user_timezone='UTC'):
     encode = html.fromstring(resp.content)
     
     try:
-        buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][1]/text()")[0]
+        buyPriceInBlackmarket = encode.xpath("//tbody//a[@href='/ar/currency/usd-to-egp/exchange']/ancestor::td/following-sibling::td[1]/text()")[0]
     except IndexError:
         try:
             buyPriceInBlackmarket = encode.xpath("//tbody/tr[1]//td[@class='text-success'][1]/text()")[0]
@@ -34,7 +34,7 @@ def fetch_exchange_rates(user_timezone='UTC'):
         sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-danger'][2]/text()")[0]
     except IndexError:
         try:
-            sellPriceInBlackMarket = encode.xpath("//tbody/tr[1]//td[@class='text-success'][2]/text()")[0]
+            sellPriceInBlackMarket = encode.xpath("//tbody//a[@href='/ar/currency/usd-to-egp/exchange']/ancestor::td/following-sibling::td[2]/text()")[0]
         except IndexError:
             sellPriceInBlackMarket = "غير متاح"
 

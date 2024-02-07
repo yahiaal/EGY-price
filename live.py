@@ -200,7 +200,7 @@ def home():
             </tr>
         </table>
         <p style="text-align: center; font-size: 20px; font-weight: bold; color: purple; margin-top: 40px;"> تصميم و برمجة: Yahia Zakaria Almarafi</p>
-        <p style="text-align: center; margin-top: 20px;"><a href="https://github.com/yahiaal/EGY-price/blob/main/live.py" style="font-size: 18px; font-weight: bold; color: navy; text-decoration: none;">Source Code</a></p>
+        <p style="text-align: center; margin-top: 20px;"><a href="https://github.com/yahiaal/EGY-price/blob/main/live.py" style="font-size: 18px; font-weight: bold; color: navy; text-decoration: none;" target="_blank">Source Code</a></p>
 
     </body>
     </html>

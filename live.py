@@ -17,11 +17,10 @@ def get_current_datetime(user_timezone='UTC'):
     return user_time.strftime("%Y-%m-%d %H:%M:%S")
 
 def fetch_exchange_rates(user_timezone='UTC'):
-    headers = {'User-Agent': 'Mozilla/5.0'}
     
     # USD Prices
     link_usd = "https://egcurrency.com/ar/currency/egp/exchange"
-    resp_usd = requests.get(link_usd, headers=headers)
+    resp_usd = requests.get(link_usd)
     encode_usd = html.fromstring(resp_usd.content)
 
     # Fetching USD prices
@@ -29,7 +28,7 @@ def fetch_exchange_rates(user_timezone='UTC'):
 
     # EUR Prices
     link_eur = "https://egcurrency.com/ar/currency/eur-to-egp/cbe"
-    resp_eur = requests.get(link_eur, headers=headers)
+    resp_eur = requests.get(link_eur)
     encode_eur = html.fromstring(resp_eur.content)
 
     # Fetching EUR prices

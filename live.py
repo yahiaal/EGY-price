@@ -61,6 +61,7 @@ def fetch_exchange_rates(user_timezone='UTC'):
     }
 
 def fetch_usd_prices(encode):
+    headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         buyPriceInBlackmarket = encode.xpath("//tbody//a[@href='/ar/currency/usd-to-egp/exchange']/ancestor::td/following-sibling::td[1]/text()")[0]
     except IndexError:
@@ -72,7 +73,7 @@ def fetch_usd_prices(encode):
         sellPriceInBlackMarket = "غير متاح"
 
     link2 = "https://egcurrency.com/ar/currency/usd-to-egp/exchange"
-    resp2 = requests.get(link2)
+    resp2 = requests.get(link2,headers=headers)
     encode1 = html.fromstring(resp2.content)
     
     try:
